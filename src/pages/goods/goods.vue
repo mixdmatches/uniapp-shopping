@@ -12,6 +12,8 @@ import type {
   SkuPopupLocaldata,
   SkuPopupEvent,
 } from '@/components/vk-data-goods-sku-popup/vk-data-goods-sku-popup.d.ts'
+import { getMemberAddressAPI } from '@/services/address'
+import type { AddressItem } from '@/types/address'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 
@@ -50,9 +52,18 @@ const getGoodsDetail = async () => {
   }
 }
 
+// 获取地址列表
+const addressList = ref<AddressItem[]>()
+// 获取地址列表
+const getMemberAddress = async () => {
+  console.log(113)
+  const res = await getMemberAddressAPI()
+  addressList.value = res.result
+}
 // 页面加载完成后执行的操作
 onLoad(() => {
   getGoodsDetail()
+  getMemberAddress()
 })
 
 // 轮播图交互
@@ -121,6 +132,11 @@ const onAddCart = async (ev: SkuPopupEvent) => {
   uni.showToast({ title: '加入购物车成功', icon: 'success' })
   isShow.value = false
 }
+
+// 立即购买
+const onbuyNow = async (ev: SkuPopupEvent) => {
+  uni.navigateTo({ url: `pagesOrder/create/create?skuId=${ev._id}&count=${ev.buy_num}` })
+}
 </script>
 
 <template>
@@ -134,6 +150,7 @@ const onAddCart = async (ev: SkuPopupEvent) => {
     ref="skuPopRef"
     :active-style="{ color: '#27BA98', borderColor: '#27BA98', backgroundColor: 'E9F8F5' }"
     @add-cart="onAddCart"
+    @buy-now="onbuyNow"
   />
   <scroll-view scroll-y class="viewport">
     <!-- 基本信息 -->
@@ -233,7 +250,7 @@ const onAddCart = async (ev: SkuPopupEvent) => {
       <button class="icons-button" open-type="contact">
         <text class="icon-handset"></text>客服
       </button>
-      <navigator class="icons-button" url="/pages/cart/cart" open-type="switchTab">
+      <navigator class="icons-button" url="/pages/cart/cart2">
         <text class="icon-cart"></text>购物车
       </navigator>
     </view>
@@ -245,7 +262,11 @@ const onAddCart = async (ev: SkuPopupEvent) => {
 
   <!-- uni-ui弹出层 -->
   <uni-popup ref="popup" type="bottom" background-color="#fff">
-    <AddressPanel v-if="popupName === 'address'" @close="popup?.close()"></AddressPanel>
+    <AddressPanel
+      v-if="popupName === 'address'"
+      @close="popup?.close()"
+      :addressList="addressList!"
+    ></AddressPanel>
     <ServicePanel v-if="popupName === 'service'" @close="popup?.close()"></ServicePanel>
   </uni-popup>
 </template>
